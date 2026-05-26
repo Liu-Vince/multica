@@ -1,21 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Copy, Terminal } from "lucide-react";
 import { useLocale } from "../../i18n";
 
-const INSTALL_CMD =
-  "curl -fsSL https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh | bash";
-const SETUP_CMD = "multica setup";
+const DEFAULT_INSTALL_SCRIPT_URL =
+  "https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh";
 
 /**
  * Scenario-first CLI section. Copy leans into servers / remote dev
  * boxes / headless setups rather than positioning CLI as a
  * lightweight Desktop. Two copy-and-paste command blocks.
+ *
+ * Commands are fetched from the public /api/config endpoint so
+ * self-hosted deployments show the correct install URLs.
  */
 export function CliSection() {
   const { t } = useLocale();
   const d = t.download.cli;
+  const { INSTALL_CMD, SETUP_CMD } = useCliInstallCommands();
 
   return (
     <section id="cli" className="bg-[#f7f7f5] py-20 text-[#0a0d12] sm:py-24">
@@ -46,6 +49,36 @@ export function CliSection() {
       </div>
     </section>
   );
+}
+
+function useCliInstallCommands() {
+  const [installCmd, setInstallCmd] = useState(
+    `curl -fsSL ${DEFAULT_INSTALL_SCRIPT_URL} | bash`,
+  );
+  const [setupCmd, setSetupCmd] = useState("multica setup");
+
+  useEffect(() => {
+    fetch("/api/config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((cfg) => {
+        if (!cfg) return;
+        const scriptUrl =
+          cfg.install_script_url || DEFAULT_INSTALL_SCRIPT_URL;
+        const serverUrl = cfg.cli_server_url || "";
+        const appUrl = cfg.cli_app_url || "";
+        setInstallCmd(`curl -fsSL ${scriptUrl} | bash`);
+        setSetupCmd(
+          serverUrl && appUrl
+            ? `multica setup self-host --server-url ${serverUrl} --app-url ${appUrl}`
+            : "multica setup",
+        );
+      })
+      .catch(() => {
+        /* use defaults */
+      });
+  }, []);
+
+  return { INSTALL_CMD: installCmd, SETUP_CMD: setupCmd };
 }
 
 function CommandBlock({

@@ -7,6 +7,7 @@ import { useWorkspaceId } from "@multica/core/hooks";
 import { runtimeKeys } from "@multica/core/runtimes/queries";
 import { useWSEvent } from "@multica/core/realtime";
 import { paths, useWorkspaceSlug } from "@multica/core/paths";
+import { useInstallCommands } from "../utils/install-commands";
 import {
   Dialog,
   DialogContent,
@@ -20,14 +21,6 @@ import { useNavigation } from "../../navigation";
 import { useT } from "../../i18n";
 
 type Step = "instructions" | "success";
-
-const INSTALL_CMD =
-  "curl -fsSL https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh | bash";
-const SETUP_CMD = "multica setup";
-const TOKEN_CMD = `multica config set server_url https://api.multica.ai
-multica config set app_url https://multica.ai
-multica login --token <YOUR_TOKEN>
-multica daemon start`;
 
 export function ConnectRemoteDialog({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<Step>("instructions");
@@ -157,6 +150,7 @@ function CommandStep({
 
 function InstructionsStep({ onClose }: { onClose: () => void }) {
   const { t } = useT("runtimes");
+  const { INSTALL_CMD, SETUP_CMD } = useInstallCommands();
   return (
     <>
       <DialogHeader className="px-6 pt-6 pb-2">
@@ -206,6 +200,7 @@ function InstructionsStep({ onClose }: { onClose: () => void }) {
 
 function TroubleshootingDetails() {
   const { t } = useT("runtimes");
+  const { TOKEN_CMD } = useInstallCommands();
   return (
     <details className="group rounded-lg border border-dashed">
       <summary className="flex cursor-pointer list-none items-center gap-1.5 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">

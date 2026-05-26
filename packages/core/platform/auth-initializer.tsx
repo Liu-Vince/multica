@@ -54,6 +54,12 @@ export function AuthInitializer({
           allowSignup: cfg.allow_signup,
           googleClientId: cfg.google_client_id,
         });
+        configStore.getState().setCLIConfig({
+          installScriptUrl: cfg.install_script_url,
+          cliDownloadBaseUrl: cfg.cli_download_base_url,
+          serverUrl: cfg.cli_server_url,
+          appUrl: cfg.cli_app_url,
+        });
         if (cfg.posthog_key) {
           initAnalytics({
             key: cfg.posthog_key,

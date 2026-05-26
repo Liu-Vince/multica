@@ -15,6 +15,7 @@ import { selectPlatformReleaseAssetName } from "./cli-release-asset";
 // userData on first launch when the bundled binary is missing or unusable.
 
 const GITHUB_LATEST_BASE =
+  process.env.MULTICA_CLI_DOWNLOAD_BASE_URL ||
   "https://github.com/multica-ai/multica/releases/latest/download";
 
 function binaryName(): string {

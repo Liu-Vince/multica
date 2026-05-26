@@ -23,7 +23,21 @@ type AppConfig struct {
 	PosthogKey           string `json:"posthog_key"`
 	PosthogHost          string `json:"posthog_host"`
 	AnalyticsEnvironment string `json:"analytics_environment"`
+
+	// CLI / install URLs that frontend surfaces show to users when adding
+	// remote machines.  Empty strings are omitted from the JSON response so
+	// the web app can detect "not configured" and skip rendering commands
+	// that would reference an unreachable host.
+	InstallScriptURL  string `json:"install_script_url,omitempty"`
+	CLIDownloadBaseURL string `json:"cli_download_base_url,omitempty"`
+	CLIServerURL       string `json:"cli_server_url,omitempty"`
+	CLIAppURL          string `json:"cli_app_url,omitempty"`
 }
+
+const (
+	defaultInstallScriptURL   = "https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh"
+	defaultCLIDownloadBaseURL = "https://github.com/multica-ai/multica/releases/latest/download"
+)
 
 // GetConfig is mounted on the public (unauthenticated) route group because
 // the web app calls it before login to decide whether to render the Google
@@ -33,6 +47,11 @@ func (h *Handler) GetConfig(w http.ResponseWriter, r *http.Request) {
 	config := AppConfig{
 		AllowSignup:    os.Getenv("ALLOW_SIGNUP") != "false",
 		GoogleClientID: os.Getenv("GOOGLE_CLIENT_ID"),
+
+		InstallScriptURL:  envOrDefault("INSTALL_SCRIPT_URL", defaultInstallScriptURL),
+		CLIDownloadBaseURL: envOrDefault("CLI_DOWNLOAD_BASE_URL", defaultCLIDownloadBaseURL),
+		CLIServerURL:       os.Getenv("CLI_SERVER_URL"),
+		CLIAppURL:          os.Getenv("CLI_APP_URL"),
 	}
 	if h.Storage != nil {
 		config.CdnDomain = h.Storage.CdnDomain()
@@ -50,4 +69,12 @@ func (h *Handler) GetConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, config)
+}
+
+// envOrDefault returns os.Getenv(key) if set and non-empty, otherwise fallback.
+func envOrDefault(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }
